@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Calendar, Users } from "lucide-react";
+import { formatSlot, todayLocalISO, isSlotInPast } from "../../lib/format.ts";
 
 interface BookingWidgetProps {
     restaurant: any;
@@ -29,6 +30,23 @@ export default function BookingWidget({
     handleReserveClick,
 }: BookingWidgetProps) {
     if (!restaurant) return null;
+
+    const minDate = todayLocalISO();
+
+    // Prefer live availability from the API; fall back to the restaurant's own slot
+    // list before the first response arrives.
+    const slots: any[] =
+        slotsAvailability.length > 0
+            ? slotsAvailability
+            : (restaurant.availableSlots || []).map((s: string) => ({
+                  time: s,
+                  availableSeats: restaurant.totalSeats ?? 20,
+                  isAvailable: true,
+              }));
+
+    // Drop slots that have already passed on the selected day. Both the date and the
+    // clock reading are now local, so they can no longer disagree with each other.
+    const visibleSlots = slots.filter((slotInfo: any) => !isSlotInPast(selectedDate, slotInfo.time));
 
     return (
         <div className="bg-white border border-outline-variant/20 p-6 rounded-md shadow-sm text-left">
@@ -63,7 +81,7 @@ export default function BookingWidget({
                             type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            min={new Date().toISOString().split("T")[0]}
+                            min={minDate}
                             className="w-full bg-surface-container-low/30 pl-9 pr-3 py-2.5 text-xs border border-outline-variant/40 focus:border-secondary focus:outline-none rounded-md cursor-pointer"
                         />
                     </div>
@@ -77,27 +95,12 @@ export default function BookingWidget({
                             <div className="col-span-3 py-4 text-center flex justify-center">
                                 <div className="w-5 h-5 border-2 border-outline-variant/30 border-t-secondary rounded-full animate-spin"></div>
                             </div>
+                        ) : visibleSlots.length === 0 ? (
+                            <p className="col-span-3 py-4 text-center text-[11px] text-black/50 italic">
+                                No more sittings available on this date. Try another day.
+                            </p>
                         ) : (
-                            (() => {
-                                const todayStr = new Date().toISOString().split("T")[0];
-                                const isToday = selectedDate === todayStr;
-                                const allSlots =
-                                    slotsAvailability.length > 0
-                                        ? slotsAvailability
-                                        : (restaurant.availableSlots || []).map((s: string) => ({
-                                              time: s,
-                                              availableSeats: 20,
-                                              isAvailable: true,
-                                          }));
-                                return allSlots.filter((slotInfo: any) => {
-                                    if (!isToday) return true;
-                                    const [slotHour, slotMinute] = slotInfo.time.split(":").map(Number);
-                                    const now = new Date();
-                                    const currentHour = now.getHours();
-                                    const currentMinute = now.getMinutes();
-                                    return slotHour > currentHour || (slotHour === currentHour && slotMinute > currentMinute);
-                                });
-                            })().map((slotInfo: any) => {
+                            visibleSlots.map((slotInfo: any) => {
                                 const slot = slotInfo.time;
                                 const isSelected = selectedSlot === slot;
                                 const isFull = !slotInfo.isAvailable || slotInfo.availableSeats < Number(selectedGuests);
@@ -115,7 +118,7 @@ export default function BookingWidget({
                                                   : "border-outline-variant/40 text-black/55 hover:border-primary hover:text-primary cursor-pointer"
                                         }`}
                                     >
-                                        {slot}
+                                        {formatSlot(slot)}
                                         {isFull && <span className="block text-[8px] text-error uppercase mt-0.5">Full</span>}
                                     </button>
                                 );

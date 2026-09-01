@@ -23,6 +23,9 @@ export default function Search() {
     const cuisinesSelected = searchParams.getAll("cuisine");
     const pricesSelected = searchParams.getAll("priceRange");
     const sortVal = searchParams.get("sort") || "";
+    // Carried over from the homepage search bar so quick-booking keeps the user's choice.
+    const dateVal = searchParams.get("date") || "";
+    const guestsVal = searchParams.get("guests") || "2";
 
     // Temp text inputs for immediate user typing (submit on enter/click)
     const [tempSearch, setTempSearch] = useState(searchVal);
@@ -30,10 +33,8 @@ export default function Search() {
 
     useEffect(() => {
         // Sync inputs with URL params on navigation
-        (() => {
-            setTempSearch(searchVal);
-            setTempLocation(locationVal);
-        })();
+        setTempSearch(searchVal);
+        setTempLocation(locationVal);
     }, [searchVal, locationVal]);
 
     useEffect(() => {
@@ -276,7 +277,12 @@ export default function Search() {
                             {/* Restaurants List Grid */}
                             <div className="grid gap-6 grow grid-cols-1 lg:grid-cols-2 ">
                                 {restaurants.map((restaurant) => (
-                                    <RestaurantCard key={restaurant._id} restaurant={restaurant} />
+                                    <RestaurantCard
+                                        key={restaurant._id}
+                                        restaurant={restaurant}
+                                        defaultDate={dateVal}
+                                        defaultGuests={guestsVal}
+                                    />
                                 ))}
                             </div>
                         </div>

@@ -30,8 +30,9 @@ const RestaurantSchema = new Schema<IRestaurant>(
         description: { type: String, required: true },
         cuisine: { type: String, required: true, trim: true },
         priceRange: { type: String, enum: ["$", "$$", "$$$", "$$$$"], required: true },
-        rating: { type: Number, default: 5.0, min: 1, max: 5 },
-        reviewCount: { type: Number, default: 0 },
+        // 0 means "no reviews yet" — the UI shows "New" rather than a score.
+        rating: { type: Number, default: 0, min: 0, max: 5 },
+        reviewCount: { type: Number, default: 0, min: 0 },
         location: { type: String, required: true, trim: true },
         address: { type: String, required: true },
         image: { type: String, default: "" },
@@ -42,9 +43,13 @@ const RestaurantSchema = new Schema<IRestaurant>(
         exclusive: { type: Boolean, default: false },
         owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
         status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
-        totalSeats: { type: Number, default: 20 },
+        totalSeats: { type: Number, default: 20, min: 1 },
     },
     { timestamps: true },
 );
+
+// Public listings always filter on status, and often on cuisine.
+RestaurantSchema.index({ status: 1, cuisine: 1 });
+RestaurantSchema.index({ owner: 1 });
 
 export const Restaurant = model<IRestaurant>("Restaurant", RestaurantSchema);

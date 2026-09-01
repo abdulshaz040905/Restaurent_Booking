@@ -9,6 +9,12 @@ export interface IBooking extends Document {
     guests: number;
     occasion?: string;
     specialRequests?: string;
+    // Contact details captured on the confirmation form. These can differ from the
+    // account details (e.g. booking on behalf of someone else), so they are stored
+    // per booking rather than read off the user record.
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
     status: "confirmed" | "cancelled" | "completed";
     bookingId: string;
     createdAt: Date;
@@ -24,16 +30,22 @@ const BookingSchema = new Schema<IBooking>(
         guests: { type: Number, required: true, min: 1 },
         occasion: { type: String, trim: true },
         specialRequests: { type: String, trim: true },
+        contactName: { type: String, required: true, trim: true },
+        contactEmail: { type: String, required: true, trim: true, lowercase: true },
+        contactPhone: { type: String, required: true, trim: true },
         status: { type: String, enum: ["confirmed", "cancelled", "completed"], default: "confirmed" },
         bookingId: { type: String, unique: true },
     },
     { timestamps: true },
 );
 
+// Seat-availability lookups always filter on this exact combination.
+BookingSchema.index({ restaurant: 1, date: 1, time: 1, status: 1 });
+
 // Auto-generate reference code on save
 BookingSchema.pre("save", function () {
     if (!this.bookingId) {
-        this.bookingId = `GR-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+        this.bookingId = `QD-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
     }
 });
 

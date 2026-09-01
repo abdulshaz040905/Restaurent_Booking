@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Calendar, Users, Clock, MapPin } from "lucide-react";
+import { formatSlot, formatBookingDate } from "../../lib/format.ts";
+import { restaurantImage } from "../../lib/images.ts";
 
 interface BookingSummaryProps {
     restaurant: any;
@@ -18,7 +20,7 @@ export default function BookingSummary({ restaurant, date, slot, guests }: Booki
             {/* Restaurant Info Header */}
             <div className="flex gap-4">
                 <div className="w-24 h-24 overflow-hidden rounded-sm shrink-0">
-                    <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
+                    <img src={restaurantImage(restaurant.image)} alt={restaurant.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="space-y-1">
                     <span className="text-[9px] text-secondary tracking-widest uppercase">{restaurant.cuisine}</span>
@@ -36,13 +38,13 @@ export default function BookingSummary({ restaurant, date, slot, guests }: Booki
                     <span className="text-black/55 flex items-center gap-2">
                         <Calendar size={14} /> Date
                     </span>
-                    <span>{new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                    <span>{formatBookingDate(date, { month: "short", day: "numeric", year: "numeric" })}</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-black/55 flex items-center gap-2">
                         <Clock size={14} /> Time
                     </span>
-                    <span>{slot} PM</span>
+                    <span>{formatSlot(slot)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-black/55 flex items-center gap-2">

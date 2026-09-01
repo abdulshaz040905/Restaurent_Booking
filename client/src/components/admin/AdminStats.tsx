@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Users, ShieldCheck, Utensils, Calendar } from "lucide-react";
+import { formatSlot, formatBookingDate } from "../../lib/format.ts";
 
 interface AdminStatsProps {
     stats: any;
@@ -62,7 +63,7 @@ export default function AdminStats({ stats }: AdminStatsProps) {
                                         <td className="p-4 text-primary">{b.restaurant?.name || "Deleted Restaurant"}</td>
 
                                         <td className="p-4 text-black/55">
-                                            {new Date(b.date).toLocaleDateString()} at {b.time} PM • {b.guests} Guests
+                                            {formatBookingDate(b.date)} at {formatSlot(b.time)} • {b.guests} Guests
                                         </td>
 
                                         <td className="p-4 text-right">

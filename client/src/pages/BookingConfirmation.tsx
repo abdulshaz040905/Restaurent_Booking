@@ -38,11 +38,9 @@ export default function BookingConfirmation() {
     useEffect(() => {
         // Prefill form when user details load
         if (user) {
-            (() => {
-                setName(user.name);
-                setEmail(user.email);
-                if (user.phone) setPhone(user.phone);
-            })();
+            setName(user.name);
+            setEmail(user.email);
+            if (user.phone) setPhone(user.phone);
         }
     }, [user]);
 
@@ -81,7 +79,19 @@ export default function BookingConfirmation() {
 
         try {
             setConfirming(true);
-            const res = await api.post("/bookings", { restaurantId: restaurant._id, date, time: slot, guests, occasion, specialRequests });
+            // The guest details collected below are part of the reservation — they were
+            // previously required by the form and then never sent to the API.
+            const res = await api.post("/bookings", {
+                restaurantId: restaurant._id,
+                date,
+                time: slot,
+                guests,
+                occasion,
+                specialRequests,
+                contactName: name,
+                contactEmail: email,
+                contactPhone: phone,
+            });
 
             setConfirmedBooking(res.data);
             toast.success("Reservation confirmed!");

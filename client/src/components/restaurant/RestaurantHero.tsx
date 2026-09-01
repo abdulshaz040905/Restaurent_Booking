@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Star } from "lucide-react";
-import { dummyRating, dummyReviewCount } from "../../assets/assets.ts";
+import { formatRating } from "../../lib/format.ts";
+import { restaurantImage } from "../../lib/images.ts";
 
 interface RestaurantHeroProps {
     restaurant: any;
@@ -11,7 +12,7 @@ export default function RestaurantHero({ restaurant }: RestaurantHeroProps) {
 
     return (
         <section className="relative h-[480px] w-full overflow-hidden text-left animate-in fade-in duration-500">
-            <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover brightness-[0.7]" />
+            <img src={restaurantImage(restaurant.image)} alt={restaurant.name} className="w-full h-full object-cover brightness-[0.7]" />
             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
 
             {/* Hero Overlay Info */}
@@ -36,10 +37,12 @@ export default function RestaurantHero({ restaurant }: RestaurantHeroProps) {
                         <div className="flex items-center gap-4 text-white/90 text-xs">
                             <div className="flex items-center gap-1 text-secondary-container">
                                 <Star size={14} fill="currentColor" />
-                                <span className="font-medium text-white">{dummyRating.toFixed(1)}</span>
+                                <span className="font-medium text-white">{formatRating(restaurant.rating, restaurant.reviewCount)}</span>
                             </div>
                             <span>•</span>
-                            <span>{dummyReviewCount} Reviews</span>
+                            <span>
+                                {restaurant.reviewCount || 0} {restaurant.reviewCount === 1 ? "Review" : "Reviews"}
+                            </span>
                             <span>•</span>
                             <span>Price: {restaurant.priceRange}</span>
                         </div>

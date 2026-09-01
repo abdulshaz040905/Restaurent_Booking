@@ -5,8 +5,8 @@ import { cuisines } from "../../assets/assets";
 export default function CuisineBrowse() {
     const navigate = useNavigate();
 
-    const handleCuisineClick = (cuisineName: string) => {
-        navigate(`/search?cuisine=${cuisineName}`);
+    const handleCuisineClick = (cuisineName: string, queryKey: "cuisine" | "search") => {
+        navigate(`/search?${queryKey}=${encodeURIComponent(cuisineName)}`);
     };
 
     return (
@@ -27,7 +27,7 @@ export default function CuisineBrowse() {
                     return (
                         <button
                             key={c.name}
-                            onClick={() => handleCuisineClick(c.name)}
+                            onClick={() => handleCuisineClick(c.name, c.queryKey)}
                             className="group cursor-pointer text-center py-8 bg-white border border-outline-variant/20 hover:border-secondary transition-soft flex flex-col items-center justify-center"
                         >
                             <Icon size={32} strokeWidth={1.1} className="text-black/55 group-hover:text-secondary mb-4 transition-colors" />

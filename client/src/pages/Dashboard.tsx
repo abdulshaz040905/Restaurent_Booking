@@ -9,6 +9,8 @@ import AuthModal from "../components/AuthModal.tsx";
 import api from "../lib/api.ts";
 import { CalendarIcon, UsersIcon, ClockIcon, MapPinIcon, CalendarDaysIcon } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatSlot, formatBookingDate, bookingDayAsLocalDate } from "../lib/format.ts";
+import { restaurantImage } from "../lib/images.ts";
 
 export default function Dashboard() {
     const { user } = useAppContext();
@@ -66,19 +68,19 @@ export default function Dashboard() {
 
     if (!user) return null;
 
-    // Filter bookings into upcoming and past
+    // Filter bookings into upcoming and past. Booking dates arrive as UTC midnight,
+    // so compare them as local calendar days rather than raw instants — otherwise
+    // today's booking reads as "past" for any viewer west of Greenwich.
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const upcomingBookings = bookings.filter((b) => {
-        const bDate = new Date(b.date);
-        return bDate >= today && b.status === "confirmed";
-    });
+    const isUpcoming = (b: any) => {
+        const bDate = bookingDayAsLocalDate(b.date);
+        return !!bDate && bDate >= today && b.status === "confirmed";
+    };
 
-    const pastBookings = bookings.filter((b) => {
-        const bDate = new Date(b.date);
-        return bDate < today || b.status !== "confirmed";
-    });
+    const upcomingBookings = bookings.filter(isUpcoming);
+    const pastBookings = bookings.filter((b) => !isUpcoming(b));
 
     return (
         <div className="min-h-screen bg-surface flex flex-col pt-20">
@@ -128,7 +130,7 @@ export default function Dashboard() {
                                             <div className="flex gap-4">
                                                 <div className="w-16 h-16 rounded-sm overflow-hidden shrink-0 bg-surface">
                                                     <img
-                                                        src={b.restaurant?.image}
+                                                        src={restaurantImage(b.restaurant?.image)}
                                                         alt={b.restaurant?.name}
                                                         className="w-full h-full object-cover"
                                                     />
@@ -150,11 +152,11 @@ export default function Dashboard() {
                                             <div className="flex flex-wrap items-center gap-6 text-xs text-on-surface bg-surface-container-low p-4 rounded-md border border-outline-variant/10 w-full md:w-auto">
                                                 <div className="flex items-center gap-2 pr-4 md:border-r border-outline-variant/20">
                                                     <CalendarIcon size={14} className="text-secondary" />
-                                                    <span className="font-medium">{new Date(b.date).toLocaleDateString()}</span>
+                                                    <span className="font-medium">{formatBookingDate(b.date)}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 pr-4 md:border-r border-outline-variant/20">
                                                     <ClockIcon size={14} className="text-secondary" />
-                                                    <span className="font-medium">{b.time} PM</span>
+                                                    <span className="font-medium">{formatSlot(b.time)}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <UsersIcon size={14} className="text-secondary" />
@@ -205,7 +207,7 @@ export default function Dashboard() {
                                                                   </Link>
                                                               </td>
                                                               <td className="p-4">
-                                                                  {new Date(b.date).toLocaleDateString()} at {b.time} PM
+                                                                  {formatBookingDate(b.date)} at {formatSlot(b.time)}
                                                               </td>
                                                               <td className="p-4">
                                                                   {b.guests} {b.guests === 1 ? "Guest" : "Guests"}

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link } from "react-router-dom";
 import { Calendar, Users, Clock, MapPin, Check } from "lucide-react";
+import { formatSlot, formatBookingDate } from "../../lib/format.ts";
 
 interface BookingSuccessProps {
     confirmedBooking: any;
@@ -38,7 +39,7 @@ export default function BookingSuccess({ confirmedBooking, restaurant, date, slo
                     <div className="flex items-center gap-3">
                         <Calendar size={14} className="text-black/55" />
                         <span>
-                            {new Date(date).toLocaleDateString("en-US", {
+                            {formatBookingDate(date, {
                                 weekday: "long",
                                 year: "numeric",
                                 month: "long",
@@ -48,7 +49,7 @@ export default function BookingSuccess({ confirmedBooking, restaurant, date, slo
                     </div>
                     <div className="flex items-center gap-3">
                         <Clock size={14} className="text-black/55" />
-                        <span>{slot} PM</span>
+                        <span>{formatSlot(slot)}</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <Users size={14} className="text-black/55" />

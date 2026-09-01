@@ -16,7 +16,7 @@ export default function MembershipSection() {
                     <span className="text-[10px] text-secondary tracking-[0.2em] block mb-2 uppercase">PREMIUM CLUB MEMBERSHIP</span>
                     <h2 className="font-display text-3xl md:text-4xl text-primary mb-6 leading-tight">Access the Exquisite Chef's Table</h2>
                     <p className="text-sm text-black/55 mb-8 leading-relaxed">
-                        Join GourmetReserve and receive priority access to seasonal chef collaborations, private dining club events, and
+                        Join QuickDine and receive priority access to seasonal chef collaborations, private dining club events, and
                         table guarantees at high-demand tables.
                     </p>
 

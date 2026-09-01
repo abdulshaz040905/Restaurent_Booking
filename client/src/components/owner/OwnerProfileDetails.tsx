@@ -42,20 +42,18 @@ export default function OwnerProfileDetails({ restaurant, setRestaurant }: Owner
 
     useEffect(() => {
         if (restaurant) {
-            (() => {
-                setName(restaurant.name || "");
-                setDescription(restaurant.description || "");
-                setCuisine(restaurant.cuisine || "");
-                setPriceRange(restaurant.priceRange || "$$");
-                setLocation(restaurant.location || "");
-                setAddress(restaurant.address || "");
-                setChef(restaurant.chef || "");
-                setTags(restaurant.tags?.join(", ") || "");
-                setTotalSeats(restaurant.totalSeats?.toString() || "20");
-                setAvailableSlots(restaurant.availableSlots || []);
-                setImagePreview(restaurant.image || "");
-                setImageFile(null); // Reset file selection
-            })();
+            setName(restaurant.name || "");
+            setDescription(restaurant.description || "");
+            setCuisine(restaurant.cuisine || "");
+            setPriceRange(restaurant.priceRange || "$$");
+            setLocation(restaurant.location || "");
+            setAddress(restaurant.address || "");
+            setChef(restaurant.chef || "");
+            setTags(restaurant.tags?.join(", ") || "");
+            setTotalSeats(restaurant.totalSeats?.toString() || "20");
+            setAvailableSlots(restaurant.availableSlots || []);
+            setImagePreview(restaurant.image || "");
+            setImageFile(null); // Reset file selection
         }
     }, [restaurant]);
 
@@ -100,7 +98,11 @@ export default function OwnerProfileDetails({ restaurant, setRestaurant }: Owner
                 },
             });
             setRestaurant(res.data);
-            toast.success("Profile details updated successfully!");
+            toast.success(
+                res.data?.status === "pending"
+                    ? "Details updated. Your listing is back in the admin approval queue."
+                    : "Profile details updated successfully!",
+            );
         } catch (error: any) {
             toast.error(error?.response?.data?.message || "Update failed");
         } finally {
@@ -113,6 +115,11 @@ export default function OwnerProfileDetails({ restaurant, setRestaurant }: Owner
             <h3 className="font-display text-lg font-medium text-primary border-b border-outline-variant/10 pb-4">
                 Update Profile & Capacity
             </h3>
+
+            <p className="text-[11px] text-black/50 leading-relaxed bg-surface-container-low/40 border border-outline-variant/20 rounded-sm px-3 py-2">
+                Changing your name, description, cuisine, address, chef or cover image sends the listing back to the admin approval
+                queue. Capacity and slot changes take effect immediately.
+            </p>
 
             <form onSubmit={handleUpdateRestaurant} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

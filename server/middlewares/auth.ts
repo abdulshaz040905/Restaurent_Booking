@@ -7,35 +7,35 @@ export interface AuthRequest extends Request {
 }
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-    let token;
+    const header = req.headers.authorization;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-        try {
-            // Get token from header
-            token = req.headers.authorization.split(" ")[1];
-
-            // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
-
-            // Get user from the token, exclude password
-            const user = await User.findById(decoded.id).select("-password");
-            if (!user) {
-                res.status(401).json({ message: "Not authorized, user not found" });
-                return;
-            }
-
-            req.user = user;
-            next();
-        } catch (error) {
-            console.error("Auth Middleware Error:", error);
-            res.status(401).json({ message: "Not authorized, token failed" });
-            return;
-        }
+    if (!header || !header.startsWith("Bearer ")) {
+        res.status(401).json({ message: "Not authorized, no token" });
+        return;
     }
 
+    const token = header.split(" ")[1];
     if (!token) {
         res.status(401).json({ message: "Not authorized, no token" });
         return;
+    }
+
+    try {
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
+
+        // Get user from the token, exclude password
+        const user = await User.findById(decoded.id).select("-password");
+        if (!user) {
+            res.status(401).json({ message: "Not authorized, user not found" });
+            return;
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error("Auth Middleware Error:", error);
+        res.status(401).json({ message: "Not authorized, token failed" });
     }
 };
 

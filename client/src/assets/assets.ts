@@ -1,6 +1,7 @@
 import hero_bg_img from "./hero_bg_img.png";
 import default_restaurant_img from "./default_restaurant_Img.jpeg";
 import membership_section_img from "./membership_section_img.png";
+import type { LucideIcon } from "lucide-react";
 import {
     BeefIcon,
     Building2Icon,
@@ -18,37 +19,6 @@ export const assets = {
     default_restaurant_img,
     membership_section_img,
 };
-
-export const dummyReviews = [
-    {
-        _id: "dummy-rev-1",
-        userName: "Emily Watson",
-        rating: 5,
-        comment: "Absolutely phenomenal experience! The ambiance was perfect, and the food was cooked to perfection. A must-visit!",
-        visitedDate: "2026-06-10T12:00:00.000Z",
-        createdAt: "2026-06-10T12:00:00.000Z",
-    },
-    {
-        _id: "dummy-rev-2",
-        userName: "Marcus Vance",
-        rating: 4,
-        comment:
-            "The signature dishes were incredible and the staff was extremely attentive. Will definitely come back for another dinner.",
-        visitedDate: "2026-06-08T18:30:00.000Z",
-        createdAt: "2026-06-08T18:30:00.000Z",
-    },
-    {
-        _id: "dummy-rev-3",
-        userName: "Sophia Loren",
-        rating: 5,
-        comment: "Every course of the tasting menu was a delightful surprise. The pairings were exquisite. High-end dining at its finest.",
-        visitedDate: "2026-06-05T20:15:00.000Z",
-        createdAt: "2026-06-05T20:15:00.000Z",
-    },
-];
-
-export const dummyRating = 4.8;
-export const dummyReviewCount = 124;
 
 export const footerSections = [
     {
@@ -80,11 +50,12 @@ export const bottomLinks = [
     { label: "Privacy", path: "#" },
 ];
 
-export const cuisines = [
-    { name: "Italian", icon: UtensilsCrossedIcon, label: "ITALIAN" },
-    { name: "Japanese", icon: FishIcon, label: "SUSHI" },
-    { name: "French", icon: CroissantIcon, label: "FRENCH" },
-    { name: "Rooftop", icon: Building2Icon, label: "ROOFTOP" },
-    { name: "Steakhouse", icon: BeefIcon, label: "STEAKHOUSE" },
-    { name: "Vegetarian", icon: LeafIcon, label: "VEGETARIAN" },
+export const cuisines: { name: string; icon: LucideIcon; label: string; queryKey: "cuisine" | "search" }[] = [
+    { name: "Italian", icon: UtensilsCrossedIcon, label: "ITALIAN", queryKey: "cuisine" },
+    { name: "Japanese", icon: FishIcon, label: "SUSHI", queryKey: "cuisine" },
+    { name: "French", icon: CroissantIcon, label: "FRENCH", queryKey: "cuisine" },
+    // Rooftop is a tag rather than a cuisine, so it searches instead of filtering.
+    { name: "Rooftop", icon: Building2Icon, label: "ROOFTOP", queryKey: "search" },
+    { name: "Steakhouse", icon: BeefIcon, label: "STEAKHOUSE", queryKey: "cuisine" },
+    { name: "Vegetarian", icon: LeafIcon, label: "VEGETARIAN", queryKey: "cuisine" },
 ];

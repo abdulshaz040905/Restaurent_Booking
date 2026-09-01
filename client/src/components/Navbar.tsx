@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAppContext } from "../context/AppContext.tsx";
 import { Menu, X, LogOut, LayoutDashboard, ShieldCheck } from "lucide-react";
@@ -11,6 +11,7 @@ export default function Navbar() {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -22,10 +23,31 @@ export default function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    // Close the account dropdown on an outside click or Escape.
+    useEffect(() => {
+        if (!dropdownOpen) return;
+
+        const handlePointerDown = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+            }
+        };
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setDropdownOpen(false);
+        };
+
+        document.addEventListener("mousedown", handlePointerDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [dropdownOpen]);
+
     // Close mobile menu and dropdowns when location changes
     useEffect(() => {
-        (() => setMobileMenuOpen(false))();
-        (() => setDropdownOpen(false))();
+        setMobileMenuOpen(false);
+        setDropdownOpen(false);
     }, [location]);
 
     const handleDashboardClick = () => {
@@ -44,7 +66,7 @@ export default function Navbar() {
                 {/* Logo */}
                 <div className="flex items-center gap-12">
                     <Link to="/">
-                        <img src="/logo.svg" alt="Logo" className={`h-8.5 ${scrolled || (location.pathname === "/" && "invert")}`} />
+                        <img src="/logo.svg" alt="Logo" className={`h-8.5 ${!scrolled && location.pathname === "/" ? "invert" : ""}`} />
                     </Link>
 
                     {/* Desktop Navigation Links */}
@@ -57,7 +79,7 @@ export default function Navbar() {
                         </Link>
                         <Link
                             to="/search"
-                            className={`text-sm transition-colors pb-1 border-b-2 border-transparent cursor-pointer ${location.pathname.startsWith("/search") ? "text-secondary border-secondary" : scrolled || location.pathname !== "/" ? "text-black/55 hover:text-primary" : "text-white/80 hover:text-white"}}`}
+                            className={`text-sm transition-colors pb-1 border-b-2 border-transparent cursor-pointer ${location.pathname.startsWith("/search") ? "text-secondary border-secondary" : scrolled || location.pathname !== "/" ? "text-black/55 hover:text-primary" : "text-white/80 hover:text-white"}`}
                         >
                             Restaurants
                         </Link>
@@ -73,9 +95,11 @@ export default function Navbar() {
                 {/* Auth Actions (Desktop) */}
                 <div className="hidden md:flex items-center gap-6">
                     {user ? (
-                        <div className="relative">
+                        <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
+                                aria-haspopup="menu"
+                                aria-expanded={dropdownOpen}
                                 className={`flex items-center gap-2 text-sm transition-colors cursor-pointer ${scrolled || location.pathname !== "/" ? "text-secondary" : "text-white"}`}
                             >
                                 <span className="size-7 rounded-full bg-secondary/20 border flex items-center justify-center text-xs uppercase">

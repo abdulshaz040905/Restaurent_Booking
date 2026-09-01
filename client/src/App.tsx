@@ -18,7 +18,7 @@ export default function App() {
                     style: {
                         background: "#1a1c1c",
                         color: "#ffffff",
-                        fontFamily: "Manrope, sans-serif",
+                        fontFamily: "Outfit, sans-serif",
                         fontSize: "12px",
                         letterSpacing: "0.02em",
                         borderRadius: "4px",

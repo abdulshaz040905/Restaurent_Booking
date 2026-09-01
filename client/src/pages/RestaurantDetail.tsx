@@ -8,6 +8,7 @@ import AuthModal from "../components/AuthModal.tsx";
 import api from "../lib/api.ts";
 import toast from "react-hot-toast";
 import Loader from "../components/Loader.tsx";
+import { todayLocalISO } from "../lib/format.ts";
 import RestaurantHero from "../components/restaurant/RestaurantHero.tsx";
 import RestaurantInfo from "../components/restaurant/RestaurantInfo.tsx";
 import RestaurantReviews from "../components/restaurant/RestaurantReviews.tsx";
@@ -35,9 +36,8 @@ export default function RestaurantDetail() {
                 const res = await api.get(`/restaurants/${slug}`);
                 setRestaurant(res.data);
 
-                // Initialize booking values
-                const today = new Date().toISOString().split("T")[0];
-                setSelectedDate(today);
+                // Initialize booking values (local calendar day, not the UTC day)
+                setSelectedDate(todayLocalISO());
             } catch (error: any) {
                 toast.error(error?.response?.data?.message || error?.message);
                 navigate("/");
@@ -56,7 +56,7 @@ export default function RestaurantDetail() {
             if (!restaurant?._id || !selectedDate) return;
             try {
                 setLoadingSlots(true);
-                const res = await api.get(`/restaurants/${restaurant._id}/availability?date=${selectedDate}`);
+                const res = await api.get(`/restaurants/${restaurant._id}/availability?date=${encodeURIComponent(selectedDate)}`);
                 setSlotsAvailability(res.data);
             } catch (error: any) {
                 console.error(error);
@@ -102,7 +102,7 @@ export default function RestaurantDetail() {
                     {/* Left Column (Details, Menu, Reviews) */}
                     <div className="lg:col-span-8 space-y-12">
                         <RestaurantInfo restaurant={restaurant} />
-                        <RestaurantReviews />
+                        <RestaurantReviews restaurant={restaurant} onReviewAdded={setRestaurant} />
                     </div>
 
                     {/* Right Column (Sticky Reservation Widget) */}

@@ -3,6 +3,7 @@ import React from "react";
 import { Calendar, Users, Clock } from "lucide-react";
 import api from "../../lib/api.ts";
 import toast from "react-hot-toast";
+import { formatSlot, formatBookingDate } from "../../lib/format.ts";
 
 interface OwnerBookingsProps {
     bookings: any[];
@@ -42,7 +43,7 @@ export default function OwnerBookings({ bookings, setBookings, totalSeats }: Own
                         >
                             <div className="space-y-1.5 flex-1">
                                 <div className="flex items-center gap-3">
-                                    <h4 className="font-display text-base font-medium text-primary">{b.user?.name}</h4>
+                                    <h4 className="font-display text-base font-medium text-primary">{b.contactName || b.user?.name}</h4>
                                     <span className="text-[9px] text-black/50 border border-outline-variant/30 px-1.5 py-0.5">
                                         {b.bookingId}
                                     </span>
@@ -52,11 +53,16 @@ export default function OwnerBookings({ bookings, setBookings, totalSeats }: Own
                                         <Users size={12} /> {b.guests} Guests
                                     </span>
                                     <span className="flex items-center gap-1">
-                                        <Clock size={12} /> {b.time} PM
+                                        <Clock size={12} /> {formatSlot(b.time)}
                                     </span>
                                     <span className="flex items-center gap-1">
-                                        <Calendar size={12} /> {new Date(b.date).toLocaleDateString()}
+                                        <Calendar size={12} /> {formatBookingDate(b.date)}
                                     </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-black/45">
+                                    {b.contactPhone && <span>{b.contactPhone}</span>}
+                                    {b.contactEmail && <span>{b.contactEmail}</span>}
+                                    {b.occasion && <span className="text-secondary">{b.occasion}</span>}
                                 </div>
                                 {b.specialRequests && (
                                     <p className="text-xs text-secondary/80 bg-secondary/5 px-3 py-1.5 rounded-sm border-l-2 border-secondary mt-2">
