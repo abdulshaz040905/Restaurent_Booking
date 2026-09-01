@@ -1,4 +1,4 @@
-# QuickDine
+#  QuickDine
 
 Restaurant table-booking platform. Diners search approved restaurants, pick a
 time slot against live seat availability, and manage their reservations. Owners
