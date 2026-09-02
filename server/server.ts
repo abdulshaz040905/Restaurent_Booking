@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import authRouter from "./routes/authRoutes.js";
 import restaurantRouter from "./routes/restaurantRoutes.js";
@@ -9,11 +10,14 @@ import ownerRouter from "./routes/ownerRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import { securityHeaders } from "./middlewares/security.js";
 
-// Fail fast rather than serving traffic that will 500 on the first login.
+// The app cannot work without these. Do NOT throw here: on a serverless host a
+// module-scope throw crashes the whole function and the browser gets an opaque
+// FUNCTION_INVOCATION_FAILED page with no clue what is wrong. Record the problem
+// instead and report it clearly from "/" and from every /api route below.
 const REQUIRED_ENV = ["MONGODB_URI", "JWT_SECRET"] as const;
 const missingEnv = REQUIRED_ENV.filter((key) => !process.env[key]);
 if (missingEnv.length > 0) {
-    throw new Error(`Missing required environment variable(s): ${missingEnv.join(", ")}. See server/.env.example`);
+    console.error(`[startup] Missing required environment variable(s): ${missingEnv.join(", ")}. See server/.env.example`);
 }
 
 const app = express();
@@ -45,19 +49,31 @@ app.use(
 app.use(securityHeaders);
 app.use(express.json({ limit: "1mb" }));
 
-// Ensure the database is reachable before any route touches a model. Cheap once
-// connected; on a cold serverless start it awaits the shared connection promise.
-const ensureDatabase = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Ensure the app is configured and the database is reachable before any route
+// touches a model. Cheap once connected; on a cold serverless start it awaits the
+// shared connection promise.
+const ensureReady = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (missingEnv.length > 0) {
+        res.status(503).json({
+            message: `Server is misconfigured: missing ${missingEnv.join(", ")}.`,
+            hint: "Set these in your host's environment variables, then redeploy. See server/.env.example",
+        });
+        return;
+    }
+
     try {
         await connectDB();
         next();
     } catch (err) {
         console.error(err);
-        res.status(503).json({ message: "Database unavailable. Please try again in a moment." });
+        res.status(503).json({
+            message: "Database unavailable. Please try again in a moment.",
+            hint: (err as Error)?.message,
+        });
     }
 };
 
-app.use("/api", ensureDatabase);
+app.use("/api", ensureReady);
 
 // Routes
 app.use("/api/auth", authRouter);
@@ -66,7 +82,19 @@ app.use("/api/bookings", bookingRouter);
 app.use("/api/owner", ownerRouter);
 app.use("/api/admin", adminRouter);
 
-app.get("/", (req: Request, res: Response) => res.send("Server is Live!"));
+// Health check. Deliberately does NOT require the database, so it still answers
+// when something is misconfigured — this is the endpoint to hit first when a
+// deployment misbehaves.
+app.get("/", (_req: Request, res: Response) => {
+    const states = ["disconnected", "connected", "connecting", "disconnecting"];
+    res.json({
+        status: missingEnv.length > 0 ? "misconfigured" : "ok",
+        message: missingEnv.length > 0 ? `Missing environment variable(s): ${missingEnv.join(", ")}` : "Server is Live!",
+        database: states[mongoose.connection.readyState] ?? "unknown",
+        cloudinaryConfigured: Boolean(process.env.CLOUDINARY_URL),
+        corsLockedTo: allowedOrigins.length > 0 ? allowedOrigins : "any origin (CLIENT_URL not set)",
+    });
+});
 
 // 404 for unknown API routes
 app.use((req: Request, res: Response) => {

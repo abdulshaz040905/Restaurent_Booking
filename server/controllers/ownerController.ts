@@ -2,7 +2,6 @@ import { Response } from "express";
 import { Restaurant, IRestaurant } from "../models/Restaurant.js";
 import { Booking } from "../models/Booking.js";
 import { AuthRequest } from "../middlewares/auth.js";
-import { v2 as cloudinary } from "cloudinary";
 import { SLOT_PATTERN } from "../utils/datetime.js";
 
 const PRICE_RANGES = ["$", "$$", "$$$", "$$$$"] as const;
@@ -11,8 +10,27 @@ const PRICE_RANGES = ["$", "$$", "$$$", "$$$$"] as const;
 // changes are day-to-day operations and do not.
 const MODERATED_FIELDS = ["name", "description", "cuisine", "location", "address", "chef", "image"] as const;
 
-// Helper function to upload buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer: Buffer): Promise<{ secure_url: string }> => {
+/**
+ * Upload a buffer to Cloudinary.
+ *
+ * The SDK is imported lazily on purpose. It parses CLOUDINARY_URL when the module
+ * is first loaded and throws if the value is malformed — at the top of this file
+ * that would crash the entire API at startup (an opaque FUNCTION_INVOCATION_FAILED
+ * on serverless) over a feature only used when an owner uploads a photo. Loading it
+ * here confines any such failure to this one request.
+ */
+const uploadToCloudinary = async (fileBuffer: Buffer): Promise<{ secure_url: string }> => {
+    if (!process.env.CLOUDINARY_URL) {
+        throw new Error("Image uploads are not configured on this server (CLOUDINARY_URL is not set).");
+    }
+
+    let cloudinary;
+    try {
+        ({ v2: cloudinary } = await import("cloudinary"));
+    } catch {
+        throw new Error("Image uploads are misconfigured: CLOUDINARY_URL is not a valid cloudinary:// value.");
+    }
+
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream({ folder: "QuickDine" }, (error, result) => {
             if (error) return reject(error);
