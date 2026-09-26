@@ -10,7 +10,10 @@ export const securityHeaders = (_req: Request, res: Response, next: NextFunction
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("Referrer-Policy", "no-referrer");
-    res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+    // "cross-origin", not "same-site": this API is deliberately consumed by a web
+    // app on a different host. Note that vercel.app is a public suffix, so
+    // api.vercel.app and app.vercel.app are *cross-site* to a browser, not same-site.
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
     res.removeHeader("X-Powered-By");
     next();

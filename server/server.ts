@@ -33,14 +33,29 @@ connectDB().catch((err: Error) => console.error(err.message));
 
 // CORS: lock down to the deployed front end when CLIENT_URL is set. Comma-separate
 // for multiple origins (e.g. production domain plus a preview domain).
-const allowedOrigins = (process.env.CLIENT_URL ?? "")
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
+//
+// Origins are normalised before comparing. A browser's Origin header is always
+// bare — "https://example.com", never with a trailing slash or a path — so a
+// CLIENT_URL of "https://example.com/" would otherwise never match anything, and
+// the only symptom is an opaque CORS error in the browser console.
+const normalizeOrigin = (value: string): string => value.trim().replace(/\/+$/, "").toLowerCase();
+
+const allowedOrigins = (process.env.CLIENT_URL ?? "").split(",").map(normalizeOrigin).filter(Boolean);
 
 app.use(
     cors({
-        origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+        origin(origin, callback) {
+            // No Origin header: curl, server-to-server, same-origin navigation.
+            if (!origin) return callback(null, true);
+            // No CLIENT_URL configured: allow anything (development default).
+            if (allowedOrigins.length === 0) return callback(null, true);
+
+            if (allowedOrigins.includes(normalizeOrigin(origin))) return callback(null, true);
+
+            // Say so in the logs — otherwise this is invisible from the server side.
+            console.warn(`[cors] rejected origin "${origin}". CLIENT_URL allows: ${allowedOrigins.join(", ")}`);
+            return callback(null, false);
+        },
         credentials: true,
     }),
 );
