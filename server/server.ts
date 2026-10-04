@@ -42,22 +42,55 @@ const normalizeOrigin = (value: string): string => value.trim().replace(/\/+$/, 
 
 const allowedOrigins = (process.env.CLIENT_URL ?? "").split(",").map(normalizeOrigin).filter(Boolean);
 
+// app.use(
+//     cors({
+//         origin(origin, callback) {
+//             // No Origin header: curl, server-to-server, same-origin navigation.
+//             if (!origin) return callback(null, true);
+//             // No CLIENT_URL configured: allow anything (development default).
+//             if (allowedOrigins.length === 0) return callback(null, true);
+
+//             if (allowedOrigins.includes(normalizeOrigin(origin))) return callback(null, true);
+
+//             // Say so in the logs — otherwise this is invisible from the server side.
+//             console.warn(`[cors] rejected origin "${origin}". CLIENT_URL allows: ${allowedOrigins.join(", ")}`);
+//             return callback(null, false);
+//         },
+//         credentials: true,
+//     }),
+// );
+
 app.use(
     cors({
         origin(origin, callback) {
-            // No Origin header: curl, server-to-server, same-origin navigation.
             if (!origin) return callback(null, true);
-            // No CLIENT_URL configured: allow anything (development default).
-            if (allowedOrigins.length === 0) return callback(null, true);
 
-            if (allowedOrigins.includes(normalizeOrigin(origin))) return callback(null, true);
+            const normalized = normalizeOrigin(origin);
 
-            // Say so in the logs — otherwise this is invisible from the server side.
-            console.warn(`[cors] rejected origin "${origin}". CLIENT_URL allows: ${allowedOrigins.join(", ")}`);
+            // Normal configured domains
+            if (allowedOrigins.includes(normalized)) {
+                return callback(null, true);
+            }
+
+            // Allow this project's Vercel deployment URLs
+            const isVercelDeployment =
+                /^https:\/\/restaurent-booking-[a-z0-9-]+-abdulshaz040905s-projects\.vercel\.app$/.test(
+                    normalized
+                );
+
+            if (isVercelDeployment) {
+                return callback(null, true);
+            }
+
+            console.warn(
+                `[cors] rejected origin "${origin}". CLIENT_URL allows: ${allowedOrigins.join(", ")}`
+            );
+
             return callback(null, false);
         },
+
         credentials: true,
-    }),
+    })
 );
 
 // Middleware
